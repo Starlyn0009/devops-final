@@ -1,7 +1,7 @@
 # 🚀 DevOps CI/CD — Node.js + Express + Docker + GitHub Actions
 
 Proyecto de demostración de un pipeline CI/CD completo con Node.js, pruebas automatizadas con Jest/Supertest, contenerización con Docker y despliegue automático a Docker Hub mediante GitHub Actions.
-
+echo "Actualización CI/CD" >> README.md
 ---
 
 ## 📁 Estructura del proyecto

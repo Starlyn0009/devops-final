@@ -1,0 +1,88 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# .github/workflows/ci-cd.yml
+# Pipeline de Integración Continua y Despliegue Continuo (CI/CD)
+#
+# Se dispara automáticamente al hacer push a la rama main.
+# Pasos: checkout → instalar Node → instalar deps → tests → build Docker → push Docker Hub
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI/CD Pipeline — Node.js + Docker
+
+# ── Disparadores ──────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main          # Se ejecuta solo al pushear a main
+  pull_request:
+    branches:
+      - main          # También corre en PRs hacia main (solo CI, sin push a Docker Hub)
+
+# ── Variables de entorno globales ─────────────────────────────────────────────
+env:
+  IMAGE_NAME: devops-cicd-app   # Nombre de la imagen Docker (sin usuario)
+  NODE_VERSION: '18'            # Versión de Node.js a usar
+
+# ── Jobs ──────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── Job 1: Integración Continua (CI) ────────────────────────────────────────
+  ci:
+    name: 🧪 Test & Build
+    runs-on: ubuntu-latest       # Usar el runner más reciente de Ubuntu
+
+    steps:
+      # ── Paso 1: Clonar el repositorio ──────────────────────────────────────
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v4
+
+      # ── Paso 2: Configurar Node.js ─────────────────────────────────────────
+      - name: 🟢 Instalar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'           # Cachear dependencias de npm para acelerar el pipeline
+
+      # ── Paso 3: Instalar dependencias ──────────────────────────────────────
+      - name: 📦 Instalar dependencias
+        run: npm ci              # npm ci es más rápido y reproducible que npm install en CI
+
+      # ── Paso 4: Ejecutar pruebas ────────────────────────────────────────────
+      - name: 🧪 Ejecutar pruebas (Jest + Supertest)
+        run: npm test
+
+      # ── Paso 5: Construir imagen Docker ────────────────────────────────────
+      # Se construye siempre para verificar que el Dockerfile no tiene errores.
+      - name: 🐳 Construir imagen Docker
+        run: |
+          docker build \
+            --tag ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
+            --tag ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      # ── Paso 6: Login a Docker Hub ─────────────────────────────────────────
+      # Solo se ejecuta en push a main (no en PRs) usando secrets de GitHub.
+      - name: 🔐 Login a Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # ── Paso 7: Subir imagen a Docker Hub ──────────────────────────────────
+      # Solo se ejecuta en push a main (no en PRs).
+      - name: 🚀 Push imagen a Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # ── Paso 8: Resumen del pipeline ───────────────────────────────────────
+      - name: 📋 Resumen del pipeline
+        if: always()
+        run: |
+          echo "================================"
+          echo "  Pipeline completado"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  Rama:   ${{ github.ref_name }}"
+          echo "  Evento: ${{ github.event_name }}"
+          echo "================================"

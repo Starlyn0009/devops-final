@@ -1,0 +1,29 @@
+# Archivos de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno locales (¡nunca subir al repositorio!)
+.env
+.env.local
+.env.*.local
+
+# Archivos de cobertura de tests
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

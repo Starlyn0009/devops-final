@@ -1,0 +1,25 @@
+{
+  "name": "devops-cicd-app",
+  "version": "1.0.0",
+  "description": "Aplicación Node.js con Express — Proyecto final DevOps CI/CD",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "jest --forceExit --detectOpenHandles"
+  },
+  "keywords": ["devops", "cicd", "nodejs", "express", "docker"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "verbose": true
+  }
+}
